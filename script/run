@@ -9,7 +9,7 @@ if [ -z "$source" ]; then
   exit 1
 fi
 
-json=$(cat .env.json)
+json=$(cat config.json)
 
 docker build -t 18fgsa/s3-resource-simple .
 
