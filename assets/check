@@ -4,8 +4,5 @@
 
 set -e
 
-echo "[
-  {
-    \"timestamp\": \"foo\"
-  }
-]"
+# pretend that "the given version is already the latest"
+echo "[]"

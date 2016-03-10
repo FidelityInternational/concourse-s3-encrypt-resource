@@ -33,8 +33,4 @@ aws s3 sync "s3://$bucket" $dest
 echo "...done."
 
 
-# use a hard-coded version, so that the check passes
-jq -n "{
-  version: {
-    timestamp: \"foo\"}
-}" >&3
+source "$(dirname $0)/emit.sh" >&3

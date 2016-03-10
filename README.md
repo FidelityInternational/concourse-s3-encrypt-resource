@@ -14,4 +14,4 @@ Requires Docker.
 1. Modify `config.json`.
     * See [the instructions for getting your AWS credentials](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html#cli-signup).
     * Exclude the `s3://` prefix/protocol for the `bucket`.
-1. Run `./test/run </full/path/to/dir/or/file>`.
+1. Run `./test/out </full/path/to/dir/or/file>`.

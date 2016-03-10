@@ -17,6 +17,7 @@ if [ -z "$source" ]; then
 fi
 #######################################
 
+
 # parse incoming config data
 payload=`cat`
 bucket=$(echo "$payload" | jq -r '.source.bucket')
@@ -33,8 +34,4 @@ aws s3 sync $source "s3://$bucket"
 echo "...done."
 
 
-# use a hard-coded version, so that the check passes
-jq -n "{
-  version: {
-    timestamp: \"foo\"}
-}" >&3
+source "$(dirname $0)/emit.sh" >&3
