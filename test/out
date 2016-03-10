@@ -11,7 +11,7 @@ fi
 
 json=$(cat config.json)
 
-docker build -t 18fgsa/s3-resource-simple .
+source "$(dirname $0)/build.sh"
 
 echo $json | docker run \
   -i \
