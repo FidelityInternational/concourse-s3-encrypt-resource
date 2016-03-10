@@ -6,5 +6,3 @@ RUN pip install --upgrade pip
 RUN pip install --upgrade awscli
 
 ADD assets/ /opt/resource/
-
-CMD echo Simple S3 Resource ready.

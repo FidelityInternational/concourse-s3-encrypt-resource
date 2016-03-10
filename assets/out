@@ -1,6 +1,26 @@
 #!/bin/sh
 
+# https://github.com/concourse/git-resource/blob/6fcfbd4/assets/out#L4-L16
 set -e
-set -x
 
-echo foo
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
+
+source=$1
+
+if [ -z "$source" ]; then
+  echo "usage: $0 <path/to/volume>"
+  exit 1
+fi
+#######################################
+
+# credentials are provided via environment variables
+# http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-environment
+aws s3 sync $source "s3://$S3_BUCKET"
+
+# use the current UNIX time as the version
+# https://github.com/concourse/git-resource/blob/6fcfbd4/assets/out#L133-L136
+jq -n "{
+  version: {
+    timestamp: $(date +%s)}
+}" >&3

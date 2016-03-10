@@ -1,0 +1,20 @@
+#!/bin/sh
+
+set -e
+set -x
+
+source=$1
+
+if [ -z "$source" ]; then
+  echo "usage: $0 </full/path/to/dir/or/file>"
+  exit 1
+fi
+
+docker build -t s3-resource-simple .
+
+docker run \
+  --env-file .env \
+  --rm \
+  -v $source:/tmp/input \
+  s3-resource-simple \
+  /opt/resource/out /tmp/input
