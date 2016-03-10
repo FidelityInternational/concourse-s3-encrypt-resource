@@ -1,19 +1,22 @@
 #!/bin/sh
 
 set -e
-set -x
 
 source=$1
+bucket=$2
 
-if [ -z "$source" ]; then
-  echo "usage: $0 </full/path/to/dir/or/file>"
+if [ -z "$source" ] || [ -z "$bucket" ]; then
+  echo "usage: $0 </full/path/to/dir/or/file> <bucket>"
   exit 1
 fi
 
 docker build -t 18fgsa/s3-resource-simple .
 
-docker run \
+json="{\"source\": {\"bucket\": \"$bucket\"}}"
+
+echo $json | docker run \
   --env-file .env \
+  -i \
   --rm \
   -v $source:/tmp/input \
   18fgsa/s3-resource-simple \

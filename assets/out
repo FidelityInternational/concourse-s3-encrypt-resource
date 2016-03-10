@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# http://concourse.ci/implementing-resources.html#out:-update-a-resource.
+
 # https://github.com/concourse/git-resource/blob/6fcfbd4/assets/out#L4-L16
 set -e
 
@@ -14,9 +16,15 @@ if [ -z "$source" ]; then
 fi
 #######################################
 
+# parse incoming config data
+payload=`cat`
+bucket=$(echo "$payload" | jq -r '.source.bucket')
+
+echo "Uploading to S3..."
 # credentials are provided via environment variables
 # http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-environment
-aws s3 sync $source "s3://$S3_BUCKET"
+aws s3 sync $source "s3://$bucket"
+echo "...done."
 
 # use the current UNIX time as the version
 # https://github.com/concourse/git-resource/blob/6fcfbd4/assets/out#L133-L136

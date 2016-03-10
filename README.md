@@ -12,6 +12,9 @@ Requires Docker.
 
 ```bash
 cp .env.example .env
+
 # modify .env
-./script/run /full/path/to/dir/or/file
+
+# exclude the `s3://` prefix/protocol for the `bucket`
+./script/run </full/path/to/dir/or/file> <bucket>
 ```
