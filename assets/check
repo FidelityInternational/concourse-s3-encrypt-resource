@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# http://concourse.ci/implementing-resources.html#resource-check
+
+set -e
+
+echo "[
+  {
+    \"timestamp\": \"foo\"
+  }
+]"
