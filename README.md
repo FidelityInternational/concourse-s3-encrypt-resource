@@ -4,11 +4,33 @@ Resource to upload files to S3. Unlike the [the official S3 Resource](https://gi
 
 ## Usage
 
-TODO
+Include the following in your Pipeline YAML file, replacing the values in the angle brackets (`< >`):
+
+```yaml
+resource_types:
+- name: <resource type name>
+  type: docker-image
+  source:
+    repository: 18fgsa/s3-resource-simple
+resources:
+- name: <resource name>
+  type: <resource type name>
+  source:
+    access_key_id: {{aws-access-key}}
+    secret_access_key: {{aws-secret-key}}
+    bucket: {{aws-bucket}}
+jobs:
+- name: <job name>
+  plan:
+  - <some Resource or Task that outputs files>
+  - put: <resource name>
+```
+
+See [the instructions for getting your AWS credentials](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html#cli-signup), then pass them and the bucket name in as [parameters](http://concourse.ci/fly-set-pipeline.html#section_parameters).
 
 ## Development
 
-Requires Docker.
+Requires [Docker](https://www.docker.com/).
 
 1. Run `cp config.example.json config.json`.
 1. Modify `config.json`.
