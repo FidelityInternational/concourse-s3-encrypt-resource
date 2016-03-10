@@ -10,11 +10,8 @@ TODO
 
 Requires Docker.
 
-```bash
-cp .env.example .env
-
-# modify .env
-
-# exclude the `s3://` prefix/protocol for the `bucket`
-./script/run </full/path/to/dir/or/file> <bucket>
-```
+1. Run `cp config.example.json config.json`.
+1. Modify `config.json`.
+    * See [the instructions for getting your AWS credentials](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html#cli-signup).
+    * Exclude the `s3://` prefix/protocol for the `bucket`.
+1. Run `./script/run </full/path/to/dir/or/file>`.

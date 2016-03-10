@@ -20,11 +20,17 @@ fi
 payload=`cat`
 bucket=$(echo "$payload" | jq -r '.source.bucket')
 
+
 echo "Uploading to S3..."
-# credentials are provided via environment variables
+
 # http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-environment
+export AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
+export AWS_SECRET_ACCESS_KEY=$(echo "$payload" | jq -r '.source.secret_access_key')
+
 aws s3 sync $source "s3://$bucket"
+
 echo "...done."
+
 
 # use the current UNIX time as the version
 # https://github.com/concourse/git-resource/blob/6fcfbd4/assets/out#L133-L136
