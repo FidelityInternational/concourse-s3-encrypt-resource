@@ -1,6 +1,6 @@
 # Pipeline that clones this repository, then uploads it to S3. Local usage:
 #
-#   fly set-pipeline -t lite -n -c pipelines/custom-resource.yml -p custom-resource -v access_key_id=<key> -v secret_access_key=<secret> -v aws-bucket=<bucket>
+#   fly set-pipeline -t lite -n -c test/pipeline.yml -p s3-resource-simple-test -v access_key_id=<key> -v secret_access_key=<secret> -v aws-bucket=<bucket>
 bucket: {{aws-bucket}}
 #
 resource_types:
