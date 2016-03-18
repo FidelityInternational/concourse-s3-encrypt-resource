@@ -17,7 +17,7 @@ fi
 # parse incoming config data
 payload=`cat`
 bucket=$(echo "$payload" | jq -r '.source.bucket')
-options=$(echo "$payload" | jq -r '.source.options | join(" ")')
+options=$(echo "$payload" | jq -r '.source.options // [] | join(" ")')
 
 # export for `aws` cli
 export AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
