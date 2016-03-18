@@ -5,7 +5,7 @@ set -e
 source=$1
 
 if [ -z "$source" ]; then
-  echo "usage: $0 </full/path/to/dir>"
+  echo "usage: $0 </full/path/to/dir/or/file>"
   exit 1
 fi
 
