@@ -1,8 +1,6 @@
 #!/bin/sh
 
-# http://concourse.ci/implementing-resources.html#in:-fetch-a-given-resource.
-
-# https://github.com/concourse/git-resource/blob/6fcfbd4/assets/out#L4-L16
+# Resource Impl: http://concourse.ci/implementing-resources.html#in:-fetch-a-given-resource
 set -e
 
 exec 3>&1 # make stdout available as fd 3 for the result
@@ -19,17 +17,14 @@ fi
 # parse incoming config data
 payload=`cat`
 bucket=$(echo "$payload" | jq -r '.source.bucket')
+options=$(echo "$payload" | jq -r '.source.options | join(" ")')
 
-
-echo "Downloading from S3..."
-
-# http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html#cli-environment
+# export for `aws` cli
 export AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
 export AWS_SECRET_ACCESS_KEY=$(echo "$payload" | jq -r '.source.secret_access_key')
 
-aws s3 sync "s3://$bucket" $dest
-
+echo "Downloading from S3..."
+eval aws s3 sync "s3://$bucket" $dest $options
 echo "...done."
-
 
 source "$(dirname $0)/emit.sh" >&3

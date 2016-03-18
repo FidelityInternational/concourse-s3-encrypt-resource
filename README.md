@@ -19,11 +19,36 @@ resources:
     access_key_id: {{aws-access-key}}
     secret_access_key: {{aws-secret-key}}
     bucket: {{aws-bucket}}
+    options: [<optional, see note below>]
 jobs:
 - name: <job name>
   plan:
   - <some Resource or Task that outputs files>
   - put: <resource name>
+```
+
+### Options
+The `options` parameter is synonymous with the options that `aws cli` accepts for `sync`.
+Please see
+[S3 Sync Options](http://docs.aws.amazon.com/cli/latest/reference/s3/sync.html#options)
+And pay special attention to the
+[Use of Exclude and Include Filters](http://docs.aws.amazon.com/cli/latest/reference/s3/index.html#use-of-exclude-and-include-filters)
+
+Given the following directory `test` we can upload _only_ the `results` directory by using the `options` JSON below.
+
+```
+test
+├── results
+│   ├── 1.json
+│   └── 2.json
+└── scripts
+    └── bad.sh
+```
+```
+options: [
+  "--exclude: '*'",
+  "--include: 'results/*'"
+]
 ```
 
 ## Development
