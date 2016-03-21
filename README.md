@@ -31,10 +31,10 @@ jobs:
 The `options` parameter is synonymous with the options that `aws cli` accepts for `sync`.
 Please see
 [S3 Sync Options](http://docs.aws.amazon.com/cli/latest/reference/s3/sync.html#options)
-And pay special attention to the
+and pay special attention to the
 [Use of Exclude and Include Filters](http://docs.aws.amazon.com/cli/latest/reference/s3/index.html#use-of-exclude-and-include-filters)
 
-Given the following directory `test` we can upload _only_ the `results` directory by using the `options` JSON below.
+Given the following directory `test` we can upload _only_ the `results` subdirectory by using the `options` JSON below.
 
 ```
 test
