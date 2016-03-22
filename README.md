@@ -68,3 +68,5 @@ Requires [Docker](https://www.docker.com/).
   * Exclude the `s3://` prefix/protocol for `bucket`.
 
 1. Run `./test/out </full/path/to/dir>`.
+1. Run `./test/in </full/path/to/dir>`.
+1. Run `./test/check`.
