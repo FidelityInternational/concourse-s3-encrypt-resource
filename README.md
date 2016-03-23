@@ -53,18 +53,6 @@ options:
 
 Requires [Docker](https://www.docker.com/).
 
-### Building, Uploading, and Using the Docker Image
-1. Download [Docker Toolbox](https://www.docker.com/products/docker-toolbox).
-1. Get a [Docker Hub](https://www.dockerhub.com) account
-1. Launch the Docker Terminal and `cd` to this directory.
-1. `docker login -e <email> -p <password> -u <username>`
-1. `docker build -t <username>/s3-resource-simple .`
-1. verify with `docker images`
-1. `docker push <username>/s3-resource-simple`
-1. Now you can test your local Concourse pipelines using <username>/s3-resource-simple.
-
-
-### Tests
 1. Run `cp config.example.json config.json`.
 1. Modify `config.json`.
   * See [the instructions for getting your AWS credentials](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html#cli-signup).
@@ -73,3 +61,5 @@ Requires [Docker](https://www.docker.com/).
 1. Run `./test/out </full/path/to/dir>`.
 1. Run `./test/in </full/path/to/dir>`.
 1. Run `./test/check`.
+
+Every tag and branch created on this repository is automatically built on [Docker Hub](https://hub.docker.com/r/18fgsa/s3-resource-simple/).
