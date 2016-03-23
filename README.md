@@ -27,7 +27,8 @@ jobs:
   - put: <resource name>
 ```
 
-### Options
+## Options
+
 The `options` parameter is synonymous with the options that `aws cli` accepts for `sync`. Please see [S3 Sync Options](http://docs.aws.amazon.com/cli/latest/reference/s3/sync.html#options) and pay special attention to the [Use of Exclude and Include Filters](http://docs.aws.amazon.com/cli/latest/reference/s3/index.html#use-of-exclude-and-include-filters).
 
 Given the following directory `test`:
@@ -48,18 +49,3 @@ options:
   - "--exclude: '*'",
   - "--include: 'results/*'"
 ```
-
-## Development
-
-Requires [Docker](https://www.docker.com/).
-
-1. Run `cp config.example.json config.json`.
-1. Modify `config.json`.
-  * See [the instructions for getting your AWS credentials](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html#cli-signup).
-  * Exclude the `s3://` prefix/protocol for `bucket`.
-
-1. Run `./test/out </full/path/to/dir>`.
-1. Run `./test/in </full/path/to/dir>`.
-1. Run `./test/check`.
-
-Every tag and branch created on this repository is automatically built on [Docker Hub](https://hub.docker.com/r/18fgsa/s3-resource-simple/).
