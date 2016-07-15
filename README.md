@@ -27,7 +27,8 @@ jobs:
   - put: <resource name>
 ```
 
-### Options
+## Options
+
 The `options` parameter is synonymous with the options that `aws cli` accepts for `sync`. Please see [S3 Sync Options](http://docs.aws.amazon.com/cli/latest/reference/s3/sync.html#options) and pay special attention to the [Use of Exclude and Include Filters](http://docs.aws.amazon.com/cli/latest/reference/s3/index.html#use-of-exclude-and-include-filters).
 
 Given the following directory `test`:
@@ -48,28 +49,3 @@ options:
   - "--exclude: '*'",
   - "--include: 'results/*'"
 ```
-
-## Development
-
-Requires [Docker](https://www.docker.com/).
-
-### Building, Uploading, and Using the Docker Image
-1. Download [Docker Toolbox](https://www.docker.com/products/docker-toolbox).
-1. Get a [Docker Hub](https://www.dockerhub.com) account
-1. Launch the Docker Terminal and `cd` to this directory.
-1. `docker login -e <email> -p <password> -u <username>`
-1. `docker build -t <username>/s3-resource-simple .`
-1. verify with `docker images`
-1. `docker push <username>/s3-resource-simple`
-1. Now you can test your local Concourse pipelines using <username>/s3-resource-simple.
-
-
-### Tests
-1. Run `cp config.example.json config.json`.
-1. Modify `config.json`.
-  * See [the instructions for getting your AWS credentials](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html#cli-signup).
-  * Exclude the `s3://` prefix/protocol for `bucket`.
-
-1. Run `./test/out </full/path/to/dir>`.
-1. Run `./test/in </full/path/to/dir>`.
-1. Run `./test/check`.
