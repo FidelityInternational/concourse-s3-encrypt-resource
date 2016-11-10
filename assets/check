@@ -8,6 +8,9 @@ set -e
 payload=`cat`
 bucket=$(echo "$payload" | jq -r '.source.bucket')
 prefix="$(echo "$payload" | jq -r '.source.path // ""')"
+endpoint_url="$(echo "$payload" | jq -r '.source.endpoint // ""')"
+region="$(echo "$payload" | jq -r '.source.region // "us-east-1"')"
+use_v4="$(echo "$payload" | jq -r '.source.use_v4 // ""')"
 
 # export for `aws` cli
 AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
@@ -19,7 +22,16 @@ if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
   export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 fi
 
+if [ -n "$endpoint_url" ]; then
+  endpoint_opt="--endpoint-url=$endpoint_url"
+fi
+
+export AWS_DEFAULT_REGION=$region
+if [ "$use_v4" == "true" ];then
+  aws configure set default.s3.signature_version s3v4
+fi
+
 # Consider the most recent LastModified timestamp as the most recent version.
-timestamps=$(aws s3api list-objects --bucket $bucket --prefix "$prefix" --query 'Contents[].{LastModified: LastModified}')
+timestamps=$(aws s3api list-objects $endpoint_opt --bucket $bucket --prefix "$prefix" --query 'Contents[].{LastModified: LastModified}') 
 recent="$(echo $timestamps | jq -r 'max_by(.LastModified)')"
 echo "[$recent]"

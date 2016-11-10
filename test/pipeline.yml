@@ -7,12 +7,12 @@ resource_types:
 - name: s3-upload
   type: docker-image
   source:
-    repository: 18fgsa/s3-resource-simple
+    repository: making/s3-resource-simple
 resources:
 - name: scripts
   type: git
   source:
-    uri: https://github.com/18F/s3-resource-simple
+    uri: https://github.com/making/s3-resource-simple
     branch: master
 - name: s3-bucket
   type: s3-upload
@@ -20,6 +20,8 @@ resources:
     access_key_id: {{aws-access-key}}
     secret_access_key: {{aws-secret-key}}
     bucket: {{aws-bucket}}
+    endpoint: {{aws-s3-endpoint}}
+    use_v4: true
 jobs:
 - name: custom-resource-example
   plan:
