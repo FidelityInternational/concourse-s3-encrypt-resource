@@ -57,7 +57,7 @@ if [ ! "${encryption_key}" = "" ];then
   echo "Decrypting with GnuPG..."
   # shellcheck disable=SC2086
   find "${dest}" -type f -name "${filter}.gpg" \
-  -exec ./decrypt.sh {} \; \
+  -exec /opt/resource/decrypt.sh {} "${encryption_key}" \; \
   -exec echo {} \;
 fi
 

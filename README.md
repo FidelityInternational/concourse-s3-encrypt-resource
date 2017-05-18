@@ -1,6 +1,6 @@
-# Simple S3 Resource for [Concourse CI](http://concourse.ci)
+# S3 Encrypt Resource for [Concourse CI](http://concourse.ci)
 
-Resource to upload files to S3. Unlike the [the official S3 Resource](https://github.com/concourse/s3-resource), this Resource can upload or download multiple files.
+Resource to upload/download GPG encrypted files to S3. Unlike the [the official S3 Resource](https://github.com/concourse/s3-resource), this resource can upload or download multiple files using the `aws s3 sync` command.
 
 ## Usage
 
@@ -11,7 +11,7 @@ resource_types:
 - name: <resource type name>
   type: docker-image
   source:
-    repository: making/s3-resource-simple
+    repository: paasmule/s3-encrypt-resource
 resources:
 - name: <resource name>
   type: <resource type name>
@@ -19,39 +19,27 @@ resources:
     access_key_id: {{aws-access-key}}
     secret_access_key: {{aws-secret-key}}
     bucket: {{aws-bucket}}
-    path: [<optional>, use to sync to a specific path of the bucket instead of root of bucket]
-    options: [<optional, see note below>]
+    encryption_key: {{encryption_key}}
 jobs:
 - name: <job name>
   plan:
   - <some Resource or Task that outputs files>
   - put: <resource name>
+    params:
+      path: <specific path from root the bucket>
+      filter: <glob filter of files to put>
 ```
 
-In case of [minio](https://www.minio.io/),
+In case of [minio](https://www.minio.io/), add the following properties to your resource definition:
 
 ```yaml
-resource_types:
-- name: <resource type name>
-  type: docker-image
-  source:
-    repository: making/s3-resource-simple
 resources:
 - name: <resource name>
   type: <resource type name>
   source:
-    access_key_id: {{minio-access-key}}
-    secret_access_key: {{minio-secret-key}}
-    bucket: {{minio-bucket}}
+    ...
     endpoint: {{minio-endpoint-url}}
     use_v4: true
-    path: [<optional>, use to sync to a specific path of the bucket instead of root of bucket]
-    options: [<optional, see note below>]
-jobs:
-- name: <job name>
-  plan:
-  - <some Resource or Task that outputs files>
-  - put: <resource name>
 ```
 
 ## AWS Credentials
