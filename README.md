@@ -23,6 +23,10 @@ resources:
 jobs:
 - name: <job name>
   plan:
+  - get: <resource name>
+    params:
+      path: <specific path from root the bucket>
+      filter: <glob filter of files to get>    
   - <some Resource or Task that outputs files>
   - put: <resource name>
     params:
