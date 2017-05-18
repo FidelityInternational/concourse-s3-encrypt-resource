@@ -6,44 +6,58 @@ set -e
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
 
-dest=$1
+dest=${1}
 
-if [ -z "$dest" ]; then
+if [ -z "${dest}" ]; then
   echo "usage: $0 <path/to/volume>"
   exit 1
 fi
 #######################################
 
 # parse incoming config data
-payload=`cat`
-bucket=$(echo "$payload" | jq -r '.source.bucket')
-path=$(echo "$payload" | jq -r '.source.path // ""')
-endpoint_url="$(echo "$payload" | jq -r '.source.endpoint // ""')"
-region="$(echo "$payload" | jq -r '.source.region // "us-east-1"')"
-use_v4="$(echo "$payload" | jq -r '.source.use_v4 // ""')"
-options=$(echo "$payload" | jq -r '.source.options // [] | join(" ")')
+payload=$(cat)
+bucket=$(echo "${payload}" | jq -r '.source.bucket')
+endpoint_url="$(echo "${payload}" | jq -r '.source.endpoint // ""')"
+region="$(echo "${payload}" | jq -r '.source.region // "us-east-1"')"
+use_v4="$(echo "${payload}" | jq -r '.source.use_v4 // ""')"
+path=$(echo "${payload}" | jq -r '.params.path // ""')
+filter=$(echo "${payload}" | jq -r '.params.filter // [] | join(" ")')
+encryption_key="$(echo "${payload}" | jq -r '.source.encryption_key // ""')"
 
 # export for `aws` cli
 AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
 AWS_SECRET_ACCESS_KEY=$(echo "$payload" | jq -r '.source.secret_access_key')
 
 # Due to precedence rules, must be unset to support AWS IAM Roles.
-if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
-  export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-  export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
+  export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}"
+  export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
 fi
 
-if [ -n "$endpoint_url" ]; then
-  endpoint_opt="--endpoint-url=$endpoint_url"
+if [ -n "${endpoint_url}" ]; then
+  endpoint_opt="--endpoint-url=${endpoint_url}"
 fi
 
-export AWS_DEFAULT_REGION=$region
-if [ "$use_v4" == "true" ];then
+export AWS_DEFAULT_REGION="${region}"
+if [ "${use_v4}" = "true" ];then
   aws configure set default.s3.signature_version s3v4
 fi
 
+[ -z "${encryption_key}" ] || with_enc=".gpg"
+options="--exclude='*' --include='${filter}${with_enc}' --delete"
+
 echo "Downloading from S3..."
-eval aws s3 sync "s3://$bucket/$path" $dest $endpoint_opt $options
+# We don't want options encapsulated in quotes as they are space-separated switches
+# shellcheck disable=SC2086
+eval aws s3 sync "s3://${bucket}/${path}" "${dest}" ${endpoint_opt} ${options}
 echo "...done."
 
-source "$(dirname $0)/emit.sh" >&3
+if [ ! "${encryption_key}" = "" ];then
+  echo "Decrypting with GnuPG..."
+  # shellcheck disable=SC2086
+  find "${path}" -type f -name "${filter}" -exec \
+    gpg --yes --no-use-agent --batch --passphrase="${encryption_key}" -d {} \;
+fi
+
+# shellcheck disable=SC1090
+. "$(dirname "${0}")/emit.sh" >&3
