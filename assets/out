@@ -46,7 +46,7 @@ fi
 if [ ! "${encryption_key}" = "" ];then
   echo "Encrypting with GnuPG..."
   find "${source}/${path}" -type f -name "${filter}" -exec \
-    gpg --yes --no-use-agent --batch --passphrase="${encryption_key}" -c {} \;
+    gpg --yes --batch --passphrase="${encryption_key}" -c {} \;
   with_enc=".gpg"
 fi
 
