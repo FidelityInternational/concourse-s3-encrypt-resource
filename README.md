@@ -57,18 +57,31 @@ The `options` parameter is synonymous with the options that `aws cli` accepts fo
 Given the following directory `test`:
 
 ```
-test
-├── results
-│   ├── 1.json
-│   └── 2.json
-└── scripts
+bosh-states
+   ├── 1.json.gpg
+   └── 2.json.gpg
+scripts
     └── bad.sh
 ```
 
-we can upload _only_ the `results` subdirectory by using the following `options` in our task configuration:
+It is not necessary to specify the .gpg extension in the `filter` configuration.
+We can download _only_ the -state.json files in `bosh-states` subdirectory by using the following `path` and `filter` in our task configuration:
 
 ```yaml
-options:
-  - "--exclude: '*'",
-  - "--include: 'results/*'"
+plan:
+- do:
+  - get: minio-s3
+    params:
+      path: bosh-states
+      filter: "*-state.json"
+```
+
+Similarly, we can perform upload operations in the same fashion. As before, it is not necessary to worry about the .gpg extension on encypted files.
+
+```yaml
+ensure:
+  put: minio-s3
+  params:
+    path: bosh-states
+    filter: "*-state.json"
 ```
