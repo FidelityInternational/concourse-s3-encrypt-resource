@@ -62,4 +62,7 @@ if [ ! "${encryption_key}" = "" ];then
   echo "...done."
 fi
 
-echo "${payload}" | jq -r '.version'
+version=$(echo "${payload}" | jq -r '.version')
+jq -n "{
+  version: ${version},
+}"
