@@ -64,5 +64,5 @@ fi
 
 version=$(echo "${payload}" | jq -r '.version')
 jq -n "{
-  version: ${version},
+  version: ${version}
 }"
