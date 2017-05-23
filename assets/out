@@ -57,5 +57,8 @@ options="--exclude='*' --include='*${suffix}${with_enc}' --delete"
 eval aws s3 sync "${source}/${path}" "s3://${bucket}/${path}" ${endpoint_opt} ${options}
 echo "...done."
 
-# shellcheck disable=SC1090
-. "$(dirname "${0}")/emit.sh" >&3
+# We don't want options encapsulated in quotes as they are space-separated switches
+# shellcheck disable=SC2086
+timestamps=$(aws s3api list-objects ${endpoint_opt} --bucket "${bucket}" --prefix "${path}" --query "Contents[?ends_with(Key, \`${suffix}.gpg\`)].{LastModified: LastModified}")
+recent="$(echo "${timestamps}" | jq -r 'max_by(.LastModified)' | jq 'select (.!=null)')"
+echo "[$recent]"

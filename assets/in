@@ -52,7 +52,6 @@ echo "Downloading from S3..."
 eval aws s3 sync "s3://${bucket}/${path}" "${dest}" ${endpoint_opt} ${options}
 echo "...done."
 
-
 if [ ! "${encryption_key}" = "" ];then
   echo "Decrypting with GnuPG..."
   # shellcheck disable=SC2086
@@ -63,5 +62,4 @@ if [ ! "${encryption_key}" = "" ];then
   echo "...done."
 fi
 
-# shellcheck disable=SC1090
-. "$(dirname "${0}")/emit.sh" >&3
+echo "${payload}" | jq -r '.version'
