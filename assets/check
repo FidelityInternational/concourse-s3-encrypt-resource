@@ -5,9 +5,10 @@
 set -e
 
 # parse incoming config data
-payload=`cat`
+payload=$(cat)
 bucket=$(echo "$payload" | jq -r '.source.bucket')
-prefix="$(echo "$payload" | jq -r '.source.path // ""')"
+path="$(echo "$payload" | jq -r '.source.path // ""')"
+suffix=$(echo "${payload}" | jq -r '.source.suffix // ""')
 endpoint_url="$(echo "$payload" | jq -r '.source.endpoint // ""')"
 region="$(echo "$payload" | jq -r '.source.region // "us-east-1"')"
 use_v4="$(echo "$payload" | jq -r '.source.use_v4 // ""')"
@@ -27,11 +28,13 @@ if [ -n "$endpoint_url" ]; then
 fi
 
 export AWS_DEFAULT_REGION=$region
-if [ "$use_v4" == "true" ];then
+if [ "$use_v4" = "true" ];then
   aws configure set default.s3.signature_version s3v4
 fi
 
 # Consider the most recent LastModified timestamp as the most recent version.
-timestamps=$(aws s3api list-objects $endpoint_opt --bucket $bucket --prefix "$prefix" --query 'Contents[].{LastModified: LastModified}') 
-recent="$(echo $timestamps | jq -r 'max_by(.LastModified)')"
+# We don't want options encapsulated in quotes as they are space-separated switches
+# shellcheck disable=SC2086
+timestamps=$(aws s3api list-objects ${endpoint_opt} --bucket "${bucket}" --prefix "${path}" --query "Contents[?ends_with(Key, \`${suffix}.gpg\`)].{LastModified: LastModified}")
+recent="$(echo "${timestamps}" | jq -r 'max_by(.LastModified)' | jq 'select (.!=null)')"
 echo "[$recent]"
