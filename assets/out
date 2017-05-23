@@ -20,8 +20,8 @@ bucket=$(echo "${payload}" | jq -r '.source.bucket')
 endpoint_url="$(echo "${payload}" | jq -r '.source.endpoint // ""')"
 region="$(echo "${payload}" | jq -r '.source.region // "us-east-1"')"
 use_v4="$(echo "${payload}" | jq -r '.source.use_v4 // ""')"
-path=$(echo "${payload}" | jq -r '.params.path // ""')
-filter=$(echo "${payload}" | jq -r '.params.filter // ""')
+path=$(echo "${payload}" | jq -r '.source.path // ""')
+suffix=$(echo "${payload}" | jq -r '.source.suffix // ""')
 encryption_key="$(echo "${payload}" | jq -r '.source.encryption_key // ""')"
 
 # export for `aws` cli
@@ -45,17 +45,22 @@ fi
 
 if [ ! "${encryption_key}" = "" ];then
   echo "Encrypting with GnuPG..."
-  find "${source}/${path}" -type f -name "${filter}" -exec \
+  find "${source}/${path}" -type f -name "*${suffix}" -exec \
     gpg --yes --batch --passphrase="${encryption_key}" -c {} \;
   with_enc=".gpg"
 fi
 
 echo "Uploading to S3..."
-options="--exclude='*' --include='${filter}${with_enc}' --delete"
+options="--exclude='*' --include='*${suffix}${with_enc}' --delete"
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
 eval aws s3 sync "${source}/${path}" "s3://${bucket}/${path}" ${endpoint_opt} ${options}
 echo "...done."
 
-# shellcheck disable=SC1090
-. "$(dirname "${0}")/emit.sh" >&3
+# We don't want options encapsulated in quotes as they are space-separated switches
+# shellcheck disable=SC2086
+timestamps=$(aws s3api list-objects ${endpoint_opt} --bucket "${bucket}" --prefix "${path}" --query "Contents[?ends_with(Key, \`${suffix}.gpg\`)].{LastModified: LastModified}")
+recent="$(echo "${timestamps}" | jq -r 'max_by(.LastModified)' | jq 'select (.!=null)')"
+jq -n "{
+  version: ${recent}
+}" >&3

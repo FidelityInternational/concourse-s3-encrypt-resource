@@ -20,8 +20,8 @@ bucket=$(echo "${payload}" | jq -r '.source.bucket')
 endpoint_url="$(echo "${payload}" | jq -r '.source.endpoint // ""')"
 region="$(echo "${payload}" | jq -r '.source.region // "us-east-1"')"
 use_v4="$(echo "${payload}" | jq -r '.source.use_v4 // ""')"
-path=$(echo "${payload}" | jq -r '.params.path // ""')
-filter=$(echo "${payload}" | jq -r '.params.filter // ""')
+path=$(echo "${payload}" | jq -r '.source.path // ""')
+suffix=$(echo "${payload}" | jq -r '.source.suffix // ""')
 encryption_key="$(echo "${payload}" | jq -r '.source.encryption_key // ""')"
 
 # export for `aws` cli
@@ -44,7 +44,7 @@ if [ "${use_v4}" = "true" ];then
 fi
 
 [ -z "${encryption_key}" ] || with_enc=".gpg"
-options="--exclude='*' --include='${filter}${with_enc}' --delete"
+options="--exclude='*' --include='*${suffix}${with_enc}' --delete"
 
 echo "Downloading from S3..."
 # We don't want options encapsulated in quotes as they are space-separated switches
@@ -52,16 +52,17 @@ echo "Downloading from S3..."
 eval aws s3 sync "s3://${bucket}/${path}" "${dest}" ${endpoint_opt} ${options}
 echo "...done."
 
-
 if [ ! "${encryption_key}" = "" ];then
   echo "Decrypting with GnuPG..."
   # shellcheck disable=SC2086
-  find "${dest}" -type f -name "${filter}.gpg" \
+  find "${dest}" -type f -name "*${suffix}.gpg" \
   -exec echo "{}" \; \
   -exec /opt/resource/decrypt.sh {} "${encryption_key}" \; \
   -exec rm {} \;
   echo "...done."
 fi
 
-# shellcheck disable=SC1090
-. "$(dirname "${0}")/emit.sh" >&3
+version=$(echo "${payload}" | jq -r '.version')
+jq -n "{
+  version: ${version}
+}" >&3
