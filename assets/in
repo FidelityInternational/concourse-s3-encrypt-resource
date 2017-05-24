@@ -16,17 +16,17 @@ fi
 
 # parse incoming config data
 payload=$(cat)
-bucket=$(echo "${payload}" | jq -er '.source.bucket')
-endpoint_url="$(echo "${payload}" | jq -er '.source.endpoint // ""')"
-region="$(echo "${payload}" | jq -er '.source.region // "us-east-1"')"
-use_v4="$(echo "${payload}" | jq -er '.source.use_v4 // ""')"
-path=$(echo "${payload}" | jq -er '.source.path // ""')
-suffix=$(echo "${payload}" | jq -er '.source.suffix // ""')
-encryption_key="$(echo "${payload}" | jq -er '.source.encryption_key // ""')"
+bucket=$(echo "${payload}" | jq -r '.source.bucket')
+endpoint_url="$(echo "${payload}" | jq -r '.source.endpoint // ""')"
+region="$(echo "${payload}" | jq -r '.source.region // "us-east-1"')"
+use_v4="$(echo "${payload}" | jq -r '.source.use_v4 // ""')"
+path=$(echo "${payload}" | jq -r '.source.path // ""')
+suffix=$(echo "${payload}" | jq -r '.source.suffix // ""')
+encryption_key="$(echo "${payload}" | jq -r '.source.encryption_key // ""')"
 
 # export for `aws` cli
-AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -er '.source.access_key_id')
-AWS_SECRET_ACCESS_KEY=$(echo "$payload" | jq -er '.source.secret_access_key')
+AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
+AWS_SECRET_ACCESS_KEY=$(echo "$payload" | jq -r '.source.secret_access_key')
 
 # Due to precedence rules, must be unset to support AWS IAM Roles.
 if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
@@ -62,7 +62,7 @@ if [ ! "${encryption_key}" = "" ];then
   echo "...done."
 fi
 
-version=$(echo "${payload}" | jq -er '.version')
-jq -en "{
+version=$(echo "${payload}" | jq -r '.version')
+jq -n "{
   version: ${version}
 }" >&3

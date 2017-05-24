@@ -38,7 +38,8 @@ fi
 timestamps=$(aws s3api list-objects ${endpoint_opt} --bucket "${bucket}" --prefix "${path}" --query "Contents[?ends_with(Key, \`${suffix}.gpg\`)].{LastModified: LastModified}")
 
 if [ ! "${timestamps}" = "[]" ] && [ ! "${timestamps}" = "" ]; then
-  recent="$(echo "${timestamps}" | jq -re 'max_by(.LastModified)' | jq -e 'select (.!=null)')"
+  recent="$(echo "${timestamps}" | jq -r 'max_by(.LastModified)' | jq 'select (.!=null)')"
+
 fi
 
 [ ! "${recent}" = "" ] || recent='{}'
