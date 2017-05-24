@@ -37,4 +37,7 @@ fi
 # shellcheck disable=SC2086
 timestamps=$(aws s3api list-objects ${endpoint_opt} --bucket "${bucket}" --prefix "${path}" --query "Contents[?ends_with(Key, \`${suffix}.gpg\`)].{LastModified: LastModified}")
 recent="$(echo "${timestamps}" | jq -r 'max_by(.LastModified)' | jq 'select (.!=null)')"
+
+[ ! "${recent}" = "" ] || recent='{}'
+
 echo "[$recent]"

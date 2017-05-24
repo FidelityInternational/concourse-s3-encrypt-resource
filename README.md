@@ -26,12 +26,12 @@ jobs:
   - get: <resource name>
     params:
       path: <specific path from root the bucket>
-      filter: <glob filter of files to get>    
+      suffix: <a filename suffix>
   - <some Resource or Task that outputs files>
   - put: <resource name>
     params:
       path: <specific path from root the bucket>
-      filter: <glob filter of files to put>
+      suffix: <a filename suffix>
 ```
 
 In case of [minio](https://www.minio.io/), add the following properties to your resource definition:
@@ -64,8 +64,8 @@ scripts
     └── bad.sh
 ```
 
-It is not necessary to specify the .gpg extension in the `filter` configuration.
-We can download _only_ the -state.json files in `bosh-states` subdirectory by using the following `path` and `filter` in our task configuration:
+It is not necessary to specify the .gpg extension in the `suffix` configuration.
+We can download _only_ the -state.json files in `bosh-states` subdirectory by using the following `path` and `suffix` in our task configuration:
 
 ```yaml
 plan:
@@ -73,7 +73,7 @@ plan:
   - get: minio-s3
     params:
       path: bosh-states
-      filter: "*-state.json"
+      suffix: "-state.json"
 ```
 
 Similarly, we can perform upload operations in the same fashion. As before, it is not necessary to worry about the .gpg extension on encypted files.
@@ -83,5 +83,5 @@ ensure:
   put: minio-s3
   params:
     path: bosh-states
-    filter: "*-state.json"
+    suffix: "-state.json"
 ```
