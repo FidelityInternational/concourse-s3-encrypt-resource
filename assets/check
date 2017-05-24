@@ -36,5 +36,11 @@ fi
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
 timestamps=$(aws s3api list-objects ${endpoint_opt} --bucket "${bucket}" --prefix "${path}" --query "Contents[?ends_with(Key, \`${suffix}.gpg\`)].{LastModified: LastModified}")
-recent="$(echo "${timestamps}" | jq -r 'max_by(.LastModified)' | jq 'select (.!=null)')"
+
+if [ ! "${timestamps}" = "" ]; then
+  recent="$(echo "${timestamps}" | jq -r 'max_by(.LastModified)' | jq 'select (.!=null)')"
+fi
+
+[ ! "${recent}" = "" ] || recent='{}'
+
 echo "[$recent]"
