@@ -39,7 +39,6 @@ timestamps=$(aws s3api list-objects ${endpoint_opt} --bucket "${bucket}" --prefi
 
 if [ ! "${timestamps}" = "[]" ] && [ ! "${timestamps}" = "" ]; then
   recent="$(echo "${timestamps}" | jq -r 'max_by(.LastModified)' | jq 'select (.!=null)')"
-
 fi
 
 [ ! "${recent}" = "" ] || recent='{}'
