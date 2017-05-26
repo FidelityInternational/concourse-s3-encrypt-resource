@@ -61,8 +61,8 @@ echo "...done."
 # shellcheck disable=SC2086
 version=$(aws s3 "${endpoint_opt}" ls --recursive "s3://${bucket}/${path}" | grep "${suffix}.gpg\$" | sha1sum | awk '{print $1}')
 
-jq -n "[
-  {
+jq -n "{
+  version: {
     ref: \"${version}\"
   }
-]" >&3
+}" >&3
