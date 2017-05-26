@@ -59,11 +59,10 @@ echo "...done."
 
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-timestamps=$(aws s3api list-objects ${endpoint_opt} --bucket "${bucket}" --prefix "${path}" --query "Contents[?ends_with(Key, \`${suffix}.gpg\`)].{LastModified: LastModified}")
-recent="$(echo "${timestamps}" | jq -r 'max_by(.LastModified)' | jq 'select (.!=null)')"
+version=$(aws s3 "${endpoint_opt}" ls --recursive "s3://${bucket}/${path}" | grep "${suffix}.gpg\$" | shasum | awk '{print $1}')
 
-[ ! "${recent}" = "" ] || recent='{}'
-
-jq -n "{
-  version: ${recent}
-}" >&3
+jq -n "[
+  {
+    ref: \"${version}\"
+  }
+]" >&3
