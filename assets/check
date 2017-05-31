@@ -4,6 +4,9 @@
 
 set -e
 
+exec 3>&1 # make stdout available as fd 3 for the result
+exec 1>&2 # redirect all output to stderr for logging
+
 # parse incoming config data
 payload=$(cat)
 bucket=$(echo "$payload" | jq -r '.source.bucket')
@@ -18,29 +21,27 @@ AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
 AWS_SECRET_ACCESS_KEY=$(echo "$payload" | jq -r '.source.secret_access_key')
 
 # Due to precedence rules, must be unset to support AWS IAM Roles.
-if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
-  export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-  export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
+  export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}"
+  export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
 fi
 
-if [ -n "$endpoint_url" ]; then
-  endpoint_opt="--endpoint-url=$endpoint_url"
+if [ -n "${endpoint_url}" ]; then
+  endpoint_opt="--endpoint-url=${endpoint_url}"
 fi
 
 export AWS_DEFAULT_REGION=$region
-if [ "$use_v4" = "true" ];then
+if [ "${use_v4}" = "true" ];then
   aws configure set default.s3.signature_version s3v4
 fi
 
 # Consider the most recent LastModified timestamp as the most recent version.
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-timestamps=$(aws s3api list-objects ${endpoint_opt} --bucket "${bucket}" --prefix "${path}" --query "Contents[?ends_with(Key, \`${suffix}.gpg\`)].{LastModified: LastModified}")
+version=$(aws s3 ${endpoint_opt} ls --recursive "s3://${bucket}/${path}" | grep "${suffix}.gpg\$" | sha1sum | awk '{print $1}')
 
-if [ ! "${timestamps}" = "[]" ] && [ ! "${timestamps}" = "" ]; then
-  recent="$(echo "${timestamps}" | jq -re 'max_by(.LastModified)' | jq -e 'select (.!=null)')"
-fi
-
-[ ! "${recent}" = "" ] || recent='{}'
-
-echo "[$recent]"
+jq -n "[
+  {
+    ref: \"${version}\"
+  }
+]" >&3
