@@ -15,6 +15,7 @@ suffix=$(echo "${payload}" | jq -r '.source.suffix // ""')
 endpoint_url="$(echo "$payload" | jq -r '.source.endpoint // ""')"
 region="$(echo "$payload" | jq -r '.source.region // "us-east-1"')"
 use_v4="$(echo "$payload" | jq -r '.source.use_v4 // ""')"
+skip_ssl_verification="$(echo "$payload" | jq -r '.source.skip_ssl_verification // ""')"
 
 # export for `aws` cli
 AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
@@ -35,10 +36,15 @@ if [ "${use_v4}" = "true" ];then
   aws configure set default.s3.signature_version s3v4
 fi
 
+if [ "${skip_ssl_verification}" = "true" ]; then
+  ssl_verification_opt="--no-verify-ssl"
+  export PYTHONWARNINGS="ignore:Unverified HTTPS request"
+fi
+
 # Consider the most recent LastModified timestamp as the most recent version.
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-version=$(aws s3 ${endpoint_opt} ls --recursive "s3://${bucket}/${path}" | grep "${suffix}.gpg\$" | sha1sum | awk '{print $1}')
+version=$(aws "${ssl_verification_opt}" s3 "${endpoint_opt}" ls --recursive "s3://${bucket}/${path}" | grep "${suffix}.gpg\$" | sha1sum | awk '{print $1}')
 
 jq -n "[
   {

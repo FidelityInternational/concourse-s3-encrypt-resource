@@ -23,6 +23,7 @@ use_v4="$(echo "${payload}" | jq -r '.source.use_v4 // ""')"
 path=$(echo "${payload}" | jq -r '.source.path // ""')
 suffix=$(echo "${payload}" | jq -r '.source.suffix // ""')
 encryption_key="$(echo "${payload}" | jq -r '.source.encryption_key // ""')"
+skip_ssl_verification="$(echo "$payload" | jq -r '.source.skip_ssl_verification // ""')"
 
 # export for `aws` cli
 AWS_ACCESS_KEY_ID=$(echo "${payload}" | jq -r '.source.access_key_id')
@@ -43,6 +44,11 @@ if [ "${use_v4}" = "true" ];then
   aws configure set default.s3.signature_version s3v4
 fi
 
+if [ "${skip_ssl_verification}" = "true" ]; then
+  ssl_verification_opt="--no-verify-ssl"
+  export PYTHONWARNINGS="ignore:Unverified HTTPS request"
+fi
+
 if [ ! "${encryption_key}" = "" ];then
   echo "Encrypting with GnuPG..."
   find "${source}/${path}" -type f -name "*${suffix}" -exec \
@@ -54,12 +60,12 @@ echo "Uploading to S3..."
 options="--exclude='*' --include='*${suffix}${with_enc}' --delete"
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-eval aws s3 sync "${source}/${path}" "s3://${bucket}/${path}" ${endpoint_opt} ${options}
+eval aws "${ssl_verification_opt}" s3 sync "${source}/${path}" "s3://${bucket}/${path}" ${endpoint_opt} ${options}
 echo "...done."
 
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-version=$(aws s3 "${endpoint_opt}" ls --recursive "s3://${bucket}/${path}" | grep "${suffix}.gpg\$" | sha1sum | awk '{print $1}')
+version=$(aws "${ssl_verification_opt}" s3 "${endpoint_opt}" ls --recursive "s3://${bucket}/${path}" | grep "${suffix}.gpg\$" | sha1sum | awk '{print $1}')
 
 jq -n "{
   version: {
