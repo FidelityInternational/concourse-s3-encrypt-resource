@@ -1,6 +1,6 @@
-FROM python:3.5-alpine
+FROM python:3.8-alpine
 
-RUN apk add --update jq gnupg && \
+RUN apk add --no-cache --update jq gnupg && \
     pip install --upgrade pip && \
     pip install --upgrade awscli
 
