@@ -16,6 +16,7 @@ endpoint_url="$(echo "$payload" | jq -r '.source.endpoint // ""')"
 region="$(echo "$payload" | jq -r '.source.region // "us-east-1"')"
 use_v4="$(echo "$payload" | jq -r '.source.use_v4 // ""')"
 skip_ssl_verification="$(echo "$payload" | jq -r '.source.skip_ssl_verification // ""')"
+ca_bundle="$(echo "$payload" | jq -r '.source.ca_bundle // ""')"
 
 # export for `aws` cli
 AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
@@ -39,6 +40,11 @@ fi
 if [ "${skip_ssl_verification}" = "true" ]; then
   ssl_verification_opt="--no-verify-ssl"
   export PYTHONWARNINGS="ignore:Unverified HTTPS request"
+fi
+
+if [ -n "${ca_bundle}" ]; then
+  echo "${ca_bundle}" > /tmp/ca.pem
+  export AWS_CA_BUNDLE=/tmp/ca.pem
 fi
 
 # Consider the most recent LastModified timestamp as the most recent version.
