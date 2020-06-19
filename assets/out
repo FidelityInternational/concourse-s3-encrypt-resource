@@ -1,7 +1,9 @@
-#!/bin/sh
+#!/usr/bin/env sh
+
+set -o errexit
+set -o nounset
 
 # Resource Impl: http://concourse.ci/implementing-resources.html#out:-update-a-resource.
-set -e
 
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
@@ -45,6 +47,7 @@ if [ "${use_v4}" = "true" ];then
   aws configure set default.s3.signature_version s3v4
 fi
 
+ssl_verification_opt=""
 if [ "${skip_ssl_verification}" = "true" ]; then
   ssl_verification_opt="--no-verify-ssl"
   export PYTHONWARNINGS="ignore:Unverified HTTPS request"
@@ -55,6 +58,7 @@ if [ -n "${ca_bundle}" ]; then
   export AWS_CA_BUNDLE=/tmp/ca.pem
 fi
 
+with_enc=""
 if [ ! "${encryption_key}" = "" ];then
   echo "Encrypting with GnuPG..."
   find "${source}/${path}" -type f -name "*${suffix}" -exec \
@@ -66,12 +70,12 @@ echo "Uploading to S3..."
 options="--exclude='*' --include='*${suffix}${with_enc}' --delete"
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-eval aws "${ssl_verification_opt}" s3 sync "${source}/${path}" "s3://${bucket}/${path}" ${endpoint_opt} ${options}
+eval aws ${ssl_verification_opt} s3 sync "${source}/${path}" "s3://${bucket}/${path}" ${endpoint_opt} ${options}
 echo "...done."
 
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-version=$(aws "${ssl_verification_opt}" s3 "${endpoint_opt}" ls --recursive "s3://${bucket}/${path}" | grep "${suffix}.gpg\$" | sha1sum | awk '{print $1}')
+version=$(aws ${ssl_verification_opt} ${endpoint_opt} s3 ls --recursive "s3://${bucket}/${path}" | grep "${suffix}.gpg\$" | sha1sum | awk '{print $1}')
 
 jq -n "{
   version: {
