@@ -1,6 +1,8 @@
 # S3 Encrypt Resource for [Concourse CI](http://concourse.ci)
 
-Resource to upload/download GPG encrypted files to S3. Unlike the [the official S3 Resource](https://github.com/concourse/s3-resource), this resource can upload or download multiple files using the `aws s3 sync` command.
+Resource to upload/download GPG encrypted files to S3. Unlike the [the official S3 Resource](https://github.com/concourse/s3-resource), this resource can upload or download multiple files using the `aws s3 sync` command. 
+
+By default the sync operation uses `--delete` flag to ensure that files in the destination are removed - Use the `no_delete` option to change this behaviour.
 
 ## Usage
 
@@ -20,6 +22,7 @@ resources:
     secret_access_key: {{aws-secret-key}}
     bucket: {{aws-bucket}}
     encryption_key: {{encryption_key}}
+    no_delete: true
 jobs:
 - name: <job name>
   plan:
