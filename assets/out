@@ -27,6 +27,7 @@ suffix=$(echo "${payload}" | jq -r '.source.suffix // ""')
 encryption_key="$(echo "${payload}" | jq -r '.source.encryption_key // ""')"
 skip_ssl_verification="$(echo "$payload" | jq -r '.source.skip_ssl_verification // ""')"
 ca_bundle="$(echo "$payload" | jq -r '.source.ca_bundle // ""')"
+no_delete="$(echo "$payload" | jq -r '.source.no_delete // ""')"
 
 # export for `aws` cli
 AWS_ACCESS_KEY_ID=$(echo "${payload}" | jq -r '.source.access_key_id')
@@ -66,8 +67,13 @@ if [ ! "${encryption_key}" = "" ];then
   with_enc=".gpg"
 fi
 
+delete_flag=""
+if [ -z "${no_delete}" -o "${no_delete}" = "false" ]; then
+  delete_flag="--delete"
+fi
+
 echo "Uploading to S3..."
-options="--exclude='*' --include='*${suffix}${with_enc}' --delete"
+options="--exclude='*' --include='*${suffix}${with_enc}' ${delete_flag}"
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
 eval aws ${ssl_verification_opt} s3 sync "${source}/${path}" "s3://${bucket}/${path}" ${endpoint_opt} ${options}
