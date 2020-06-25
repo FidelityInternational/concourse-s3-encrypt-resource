@@ -49,10 +49,7 @@ if [ -n "${ca_bundle}" ]; then
 fi
 
 with_enc=""
-if [ ! "${encryption_key}" = "" ];then
-  echo "Encrypting with GnuPG..."
-  find "${source}/${path}" -type f -name "*${suffix}" -exec \
-    gpg --yes --batch --passphrase="${encryption_key}" -c {} \;
+if [ "${encryption_key}" != "" ];then
   with_enc=".gpg"
 fi
 
