@@ -29,6 +29,7 @@ if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
   export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
 fi
 
+endpoint_url=""
 if [ -n "${endpoint_url}" ]; then
   endpoint_opt="--endpoint-url=${endpoint_url}"
 fi
@@ -38,6 +39,7 @@ if [ "${use_v4}" = "true" ];then
   aws configure set default.s3.signature_version s3v4
 fi
 
+ssl_verification_opt=""
 if [ "${skip_ssl_verification}" = "true" ]; then
   ssl_verification_opt="--no-verify-ssl"
   export PYTHONWARNINGS="ignore:Unverified HTTPS request"
@@ -56,7 +58,7 @@ fi
 # Consider the most recent LastModified timestamp as the most recent version.
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-version=$(aws "${ssl_verification_opt}" s3 "${endpoint_opt}" ls --recursive "s3://${bucket}/${path}" | grep "${suffix}${with_enc}\$" | sha1sum | awk '{print $1}')
+version=$(aws ${ssl_verification_opt} s3 ${endpoint_opt} ls --recursive "s3://${bucket}/${path}" | grep "${suffix}${with_enc}\$" | sha1sum | awk '{print $1}')
 
 jq -n "[
   {
