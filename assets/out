@@ -81,7 +81,7 @@ echo "...done."
 
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-version=$(aws ${ssl_verification_opt} ${endpoint_opt} s3 ls --recursive "s3://${bucket}/${path}" | grep "${suffix}.gpg\$" | sha1sum | awk '{print $1}')
+version=$(aws ${ssl_verification_opt} ${endpoint_opt} s3 ls --recursive "s3://${bucket}/${path}" | grep "${suffix}${with_enc}\$" | sha1sum | awk '{print $1}')
 
 jq -n "{
   version: {

@@ -55,8 +55,9 @@ if [ -n "${ca_bundle}" ]; then
   export AWS_CA_BUNDLE=/tmp/ca.pem
 fi
 
+with_enc=""
 [ -z "${encryption_key}" ] || with_enc=".gpg"
-options="--exclude='*' --include='*${suffix}${with_enc}' --delete"
+options="--exclude='*' --include='*${suffix}${with_enc}'"
 
 echo "Downloading from S3..."
 # We don't want options encapsulated in quotes as they are space-separated switches
