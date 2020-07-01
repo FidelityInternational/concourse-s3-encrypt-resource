@@ -29,7 +29,7 @@ if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
   export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
 fi
 
-endpoint_url=""
+endpoint_opt=""
 if [ -n "${endpoint_url}" ]; then
   endpoint_opt="--endpoint-url=${endpoint_url}"
 fi
