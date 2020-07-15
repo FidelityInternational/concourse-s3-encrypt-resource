@@ -1,7 +1,9 @@
 #!/bin/sh
 
-# Resource Impl: http://concourse.ci/implementing-resources.html#in:-fetch-a-given-resource
-set -e
+# Resource Impl: https://concourse-ci.org/implementing-resource-types.html#resource-in
+
+set -o errexit
+set -o nounset
 
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
@@ -16,19 +18,34 @@ fi
 
 # parse incoming config data
 payload=$(cat)
-bucket=$(echo "${payload}" | jq -r '.source.bucket')
+
+bucket="$(echo "${payload}" | jq -r '.source.bucket')"
+if [ -z "${bucket}" ]; then
+  echo "No bucket supplied"
+  exit 1
+fi
+
 endpoint_url="$(echo "${payload}" | jq -r '.source.endpoint // ""')"
 region="$(echo "${payload}" | jq -r '.source.region // "us-east-1"')"
 use_v4="$(echo "${payload}" | jq -r '.source.use_v4 // ""')"
-path=$(echo "${payload}" | jq -r '.source.path // ""')
-suffix=$(echo "${payload}" | jq -r '.source.suffix // ""')
+path="$(echo "${payload}" | jq -r '.source.path // ""')"
+if [ "${path}" = '/' ]; then
+  path=""
+fi
+suffix="$(echo "${payload}" | jq -r '.source.suffix // ""')"
 encryption_key="$(echo "${payload}" | jq -r '.source.encryption_key // ""')"
 skip_ssl_verification="$(echo "$payload" | jq -r '.source.skip_ssl_verification // ""')"
 ca_bundle="$(echo "$payload" | jq -r '.source.ca_bundle // ""')"
 
 # export for `aws` cli
-AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
-AWS_SECRET_ACCESS_KEY=$(echo "$payload" | jq -r '.source.secret_access_key')
+AWS_ACCESS_KEY_ID=$(echo "${payload}" | jq -r '.source.access_key_id')
+if [ -z "${AWS_ACCESS_KEY_ID}" ]; then
+  echo "No access_key_id supplied, needed if accessing minio"
+fi
+AWS_SECRET_ACCESS_KEY=$(echo "${payload}" | jq -r '.source.secret_access_key')
+if [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
+  echo "No secret_access_key supplied, needed if accessing minio"
+fi
 
 # Due to precedence rules, must be unset to support AWS IAM Roles.
 if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
@@ -36,6 +53,7 @@ if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
   export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
 fi
 
+endpoint_opt=""
 if [ -n "${endpoint_url}" ]; then
   endpoint_opt="--endpoint-url=${endpoint_url}"
 fi
@@ -45,6 +63,7 @@ if [ "${use_v4}" = "true" ];then
   aws configure set default.s3.signature_version s3v4
 fi
 
+ssl_verification_opt=""
 if [ "${skip_ssl_verification}" = "true" ]; then
   ssl_verification_opt="--no-verify-ssl"
   export PYTHONWARNINGS="ignore:Unverified HTTPS request"
