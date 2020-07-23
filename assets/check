@@ -31,12 +31,18 @@ encryption_key="$(echo "${payload}" | jq -r '.source.encryption_key // ""')"
 
 # export for `aws` cli
 AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
-if [ -z "${AWS_ACCESS_KEY_ID}" ]; then
-  echo "No access_key_id supplied, needed if accessing minio."
+if [ -z "${AWS_ACCESS_KEY_ID}" ] || [ "${AWS_ACCESS_KEY_ID}" = "null" ]; then
+  if [ "${endpoint_url#*$minio_identifier}" != "${endpoint_url}" ]; then # if no creds are supplied and endpoint is for minio, exit
+    echo "No access_key_id supplied, needed if accessing minio."
+    exit 1
+  fi
 fi
 AWS_SECRET_ACCESS_KEY=$(echo "$payload" | jq -r '.source.secret_access_key')
-if [ -z "${AWS_SECRET_ACCESS_KEY}" ]; then
-  echo "No secret_access_key supplied, needed if accessing minio."
+if [ -z "${AWS_SECRET_ACCESS_KEY}" ] || [ "${AWS_SECRET_ACCESS_KEY}" = "null" ]; then
+  if [ "${endpoint_url#*$minio_identifier}" != "${endpoint_url}" ]; then
+    echo "No secret_access_key supplied, needed if accessing minio."
+    exit 1
+  fi
 fi
 
 # Due to precedence rules, must be unset to support AWS IAM Roles.
@@ -70,6 +76,9 @@ with_enc=""
 if [ "${encryption_key}" != "" ];then
   with_enc=".gpg"
 fi
+
+echo "Checking path in S3..."
+aws s3 ls "s3://${bucket}/${path}" --endpoint "${endpoint_url}" --no-verify-ssl > /dev/null || echo "Path check exited with code [$?], check path provided exists" && exit 1
 
 # Consider the most recent LastModified timestamp as the most recent version.
 # We don't want options encapsulated in quotes as they are space-separated switches
