@@ -1,9 +1,9 @@
-#!/usr/bin/env sh
+#!/bin/sh
+
+# Resource Impl: https://concourse-ci.org/implementing-resource-types.html#resource-out
 
 set -o errexit
 set -o nounset
-
-# Resource Impl: http://concourse.ci/implementing-resources.html#out:-update-a-resource.
 
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
@@ -18,20 +18,29 @@ fi
 
 # parse incoming config data
 payload=$(cat)
-bucket=$(echo "${payload}" | jq -r '.source.bucket')
+
+bucket="$(echo "${payload}" | jq -r '.source.bucket')"
+if [ -z "${bucket}" ]; then
+  echo "No bucket supplied"
+  exit 1
+fi
+
 endpoint_url="$(echo "${payload}" | jq -r '.source.endpoint // ""')"
 region="$(echo "${payload}" | jq -r '.source.region // "us-east-1"')"
 use_v4="$(echo "${payload}" | jq -r '.source.use_v4 // ""')"
-path=$(echo "${payload}" | jq -r '.source.path // ""')
-suffix=$(echo "${payload}" | jq -r '.source.suffix // ""')
+path="$(echo "${payload}" | jq -r '.source.path // ""')"
+if [ "${path}" = '/' ]; then
+  path=""
+fi
+suffix="$(echo "${payload}" | jq -r '.source.suffix // ""')"
 encryption_key="$(echo "${payload}" | jq -r '.source.encryption_key // ""')"
 skip_ssl_verification="$(echo "$payload" | jq -r '.source.skip_ssl_verification // ""')"
 ca_bundle="$(echo "$payload" | jq -r '.source.ca_bundle // ""')"
 no_delete="$(echo "$payload" | jq -r '.source.no_delete // ""')"
 
 # export for `aws` cli
-AWS_ACCESS_KEY_ID=$(echo "${payload}" | jq -r '.source.access_key_id')
-AWS_SECRET_ACCESS_KEY=$(echo "${payload}" | jq -r '.source.secret_access_key')
+AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
+AWS_SECRET_ACCESS_KEY=$(echo "$payload" | jq -r '.source.secret_access_key')
 
 # Due to precedence rules, must be unset to support AWS IAM Roles.
 if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
@@ -39,6 +48,7 @@ if [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
   export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}"
 fi
 
+endpoint_opt=""
 if [ -n "${endpoint_url}" ]; then
   endpoint_opt="--endpoint-url=${endpoint_url}"
 fi
@@ -68,20 +78,26 @@ if [ ! "${encryption_key}" = "" ];then
 fi
 
 delete_flag=""
-if [ -z "${no_delete}" -o "${no_delete}" = "false" ]; then
+if [ -z "${no_delete}" ] || [ "${no_delete}" = "false" ]; then
   delete_flag="--delete"
 fi
+
+timeouts="--cli-read-timeout 5 --cli-connect-timeout 5"
+
+echo "Checking path in S3..."
+# shellcheck disable=SC2086
+aws ${endpoint_opt} ${ssl_verification_opt} ${timeouts} s3 ls "s3://${bucket}/${path}" > /dev/null || ( echo "Path check failed, check path provided exists and creds are valid." && exit 1 )
 
 echo "Uploading to S3..."
 options="--exclude='*' --include='*${suffix}${with_enc}' ${delete_flag}"
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-eval aws ${ssl_verification_opt} s3 sync "${source}/${path}" "s3://${bucket}/${path}" ${endpoint_opt} ${options}
+eval aws ${ssl_verification_opt} ${endpoint_opt} ${timeouts} s3 sync "${source}/${path}" "s3://${bucket}/${path}" ${options}
 echo "...done."
 
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-version=$(aws ${ssl_verification_opt} ${endpoint_opt} s3 ls --recursive "s3://${bucket}/${path}" | grep "${suffix}${with_enc}\$" | sha1sum | awk '{print $1}')
+version=$(aws ${ssl_verification_opt} ${endpoint_opt} ${timeouts} s3 ls --recursive "s3://${bucket}/${path}" | grep "${suffix}${with_enc}\$" | sha1sum | awk '{print $1}')
 
 jq -n "{
   version: {
