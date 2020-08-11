@@ -37,8 +37,8 @@ jobs:
       suffix: <a filename suffix>
 ```
 
-> Optional parameter of fail_on_missing_path which can be set to true if step should exit without a valid path -
-> `fail_on_missing_path: "true" `
+> Optional parameter for fail_on_missing_path - Set to 'true' to cause the resource to error if the path it is looking for does not exist. In S3, paths only exist if there is an object within them, so setting this to 'true' will cause errors on 'empty' folders. Default: False
+
 
 In case of [minio](https://www.minio.io/), add the following properties to your resource definition:
 
