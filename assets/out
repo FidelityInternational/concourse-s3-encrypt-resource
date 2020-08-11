@@ -86,7 +86,7 @@ timeouts="--cli-read-timeout 5 --cli-connect-timeout 5"
 
 echo "Checking path in S3..."
 # shellcheck disable=SC2086
-aws ${endpoint_opt} ${ssl_verification_opt} ${timeouts} s3 ls "s3://${bucket}/${path}" > /dev/null || ( echo "Path check failed, check path provided exists and creds are valid." && exit 1 )
+aws ${endpoint_opt} ${ssl_verification_opt} ${timeouts} s3 ls "s3://${bucket}/${path}" > /dev/null || echo "Path check failed, check path provided exists and creds are valid."
 
 echo "Uploading to S3..."
 options="--exclude='*' --include='*${suffix}${with_enc}' ${delete_flag}"
