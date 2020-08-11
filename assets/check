@@ -28,6 +28,7 @@ suffix="$(echo "${payload}" | jq -r '.source.suffix // ""')"
 skip_ssl_verification="$(echo "${payload}" | jq -r '.source.skip_ssl_verification // ""')"
 ca_bundle="$(echo "${payload}" | jq -r '.source.ca_bundle // ""')"
 encryption_key="$(echo "${payload}" | jq -r '.source.encryption_key // ""')"
+fail_on_missing_path="$(echo "${payload}" | jq -r '.source.fail_on_missing_path // "false"')"
 
 # export for `aws` cli
 AWS_ACCESS_KEY_ID=$(echo "$payload" | jq -r '.source.access_key_id')
@@ -69,7 +70,11 @@ timeouts="--cli-read-timeout 5 --cli-connect-timeout 5"
 
 echo "Checking path in S3..."
 # shellcheck disable=SC2086
-aws ${timeouts} ${endpoint_opt} ${ssl_verification_opt} s3 ls "s3://${bucket}/${path}" > /dev/null || echo "Path check failed, check path provided exists and creds are valid."
+if [ "${fail_on_missing_path}" = "true" ]; then
+  aws ${endpoint_opt} ${ssl_verification_opt} ${timeouts} s3 ls "s3://${bucket}/${path}" > /dev/null || (echo "Path check failed, check path provided exists and creds are valid." && exit 1)
+else
+  aws ${endpoint_opt} ${ssl_verification_opt} ${timeouts} s3 ls "s3://${bucket}/${path}" > /dev/null || echo "Path check failed, check path provided exists and creds are valid."
+fi
 
 # Consider the most recent LastModified timestamp as the most recent version.
 # We don't want options encapsulated in quotes as they are space-separated switches

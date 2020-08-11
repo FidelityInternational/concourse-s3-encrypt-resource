@@ -3,6 +3,7 @@
     "access_key_id": "",
     "secret_access_key": "",
     "bucket": "",
-    "options": []
+    "options": [],
+    "fail_on_missing_path": "true"
   }
 }

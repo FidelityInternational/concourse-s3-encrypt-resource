@@ -1,6 +1,6 @@
 # S3 Encrypt Resource for [Concourse CI](http://concourse.ci)
 
-Resource to upload/download GPG encrypted files to S3. Unlike the [the official S3 Resource](https://github.com/concourse/s3-resource), this resource can upload or download multiple files using the `aws s3 sync` command. 
+Resource to upload/download GPG encrypted files to S3. Unlike the [the official S3 Resource](https://github.com/concourse/s3-resource), this resource can upload or download multiple files using the `aws s3 sync` command.
 
 By default the sync operation uses `--delete` flag to ensure that files in the destination are removed - Use the `no_delete` option to change this behaviour.
 
@@ -36,6 +36,9 @@ jobs:
       path: <specific path from root the bucket>
       suffix: <a filename suffix>
 ```
+
+> Optional parameter of fail_on_missing_path which can be set to true if step should exit without a valid path -
+> `fail_on_missing_path: "true" `
 
 In case of [minio](https://www.minio.io/), add the following properties to your resource definition:
 
