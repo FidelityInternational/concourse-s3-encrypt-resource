@@ -86,7 +86,7 @@ fi
 echo "Downloading from S3..."
 # We don't want options encapsulated in quotes as they are space-separated switches
 # shellcheck disable=SC2086
-eval aws ${ssl_verification_opt} ${endpoint_opt} ${timeouts} s3 sync "s3://${bucket}/${path} ${dest} ${options}"
+eval aws ${ssl_verification_opt} ${endpoint_opt} ${timeouts} s3 sync s3://${bucket}/${path} ${dest} ${options}
 echo "...done."
 
 if [ ! "${encryption_key}" = "" ];then
