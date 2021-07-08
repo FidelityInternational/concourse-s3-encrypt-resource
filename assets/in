@@ -8,13 +8,14 @@ set -o nounset
 exec 3>&1 # make stdout available as fd 3 for the result
 exec 1>&2 # redirect all output to stderr for logging
 
+pip install -r /opt/resource/requirements.txt
+
 dest=${1}
 
 if [ -z "${dest}" ]; then
   echo "usage: $0 <path/to/volume>"
   exit 1
 fi
-#######################################
 
 # parse incoming config data
 payload=$(cat)
@@ -99,8 +100,11 @@ if [ ! "${encryption_key}" = "" ];then
   echo "...done."
 fi
 
-version=$(echo "${payload}" | jq -re '.version')
+file_info=$(aws --endpoint-url ${endpoint_url} ${ssl_verification_opt} ${timeouts} --output json s3api list-objects --bucket ${bucket} --prefix ${path} | jq '[.Contents[] | {"file_name": .Key, "last_changed": .LastModified, "file_size": .Size}]')
 
-jq -n "{
-  version: ${version}
-}" >&3
+# shellcheck disable=SC2236
+if [ ! -z "${file_info}" ]; then
+  echo "${payload}" | /opt/resource/metadata.py "${file_info}" >&3
+else
+  echo "${payload}" | /opt/resource/metadata.py >&3
+fi
