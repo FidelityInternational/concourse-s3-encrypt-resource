@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-import os
-import requests
+
 import sys
 import json
-import dpath.util
 import dateutil.parser as dp
 from datetime import datetime
 
