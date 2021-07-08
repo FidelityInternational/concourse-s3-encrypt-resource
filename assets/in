@@ -14,7 +14,6 @@ if [ -z "${dest}" ]; then
   echo "usage: $0 <path/to/volume>"
   exit 1
 fi
-#######################################
 
 # parse incoming config data
 payload=$(cat)
@@ -99,8 +98,6 @@ if [ ! "${encryption_key}" = "" ];then
   echo "...done."
 fi
 
-version=$(echo "${payload}" | jq -re '.version')
+file_info=$(aws --endpoint-url ${endpoint_url} ${ssl_verification_opt} ${timeouts} --output json s3api list-objects --bucket ${bucket} --prefix ${path} | jq '[.Contents[] | {"file_name": .Key, "last_changed": .LastModified, "file_size": .Size}]')
 
-jq -n "{
-  version: ${version}
-}" >&3
+echo "${payload}" | /opt/resource/metadata.py "${file_info}" >&3
