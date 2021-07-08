@@ -18,19 +18,14 @@ def extract_vars_from_payload(payload):
         sys.exit(1)
     return(bucket, endpoint, path, version_ref)
 
-
 if __name__ == "__main__":
     try:
         payload = sys.stdin.read()
-        file_info = ""
-        if len(sys.argv) > 1:
-            file_info=json.loads(sys.argv[1])
-
         bucket, endpoint, path, version_ref = extract_vars_from_payload(json.loads(payload))
-
         metadata = [{"name": "bucket", "value": bucket}, {"name": "endpoint", "value": endpoint}, {"name": "path", "value": path}]
 
-        if file_info != "":
+        if sys.argv[1] != "":
+            file_info=json.loads(sys.argv[1])
             for file in file_info:
                 new_time = dp.isoparse(file['last_changed'])
                 file['last_changed'] = new_time.strftime("%d/%m/%Y, %H:%M:%S %Z")
