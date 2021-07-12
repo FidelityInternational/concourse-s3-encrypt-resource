@@ -63,6 +63,11 @@ if [ "${skip_ssl_verification}" = "true" ]; then
   export PYTHONWARNINGS="ignore:Unverified HTTPS request"
 fi
 
+path_opt=""
+if [ "${path}" != "" ]; then
+  path_opt="--prefix ${path}"
+fi
+
 if [ -n "${ca_bundle}" ]; then
   echo "${ca_bundle}" > /tmp/ca.pem
   export AWS_CA_BUNDLE=/tmp/ca.pem
@@ -98,6 +103,6 @@ if [ ! "${encryption_key}" = "" ];then
   echo "...done."
 fi
 
-file_info=$(aws --endpoint-url ${endpoint_url} ${ssl_verification_opt} ${timeouts} --output json s3api list-objects --bucket ${bucket} --prefix ${path} | jq '[.Contents[] | {"file_name": .Key, "last_changed": .LastModified, "file_size": .Size}]')
+file_info=$(aws --endpoint-url ${endpoint_url} ${ssl_verification_opt} ${timeouts} --output json s3api list-objects --bucket ${bucket} ${path_opt} | jq '[.Contents[] | {"file_name": .Key, "last_changed": .LastModified, "file_size": .Size}]')
 
 echo "${payload}" | /opt/resource/metadata.py "${file_info}" >&3
